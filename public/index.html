@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas · Catálogo de Dados</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf9f5; --top:#f3f1ea; --surface:#fff; --line:#e7e3d8; --line-2:#d9d4c5;
+    --ink:#1f1e1b; --ink-2:#4a4740; --muted:#5f5b52; --faint:#8a8578; --chip:#f3f1ea;
+    --accent:#c96442; --accent-2:#b5583a; --accent-soft:#f6e9e2; --dark:#262522;
+    --ok-bg:#e6f1e6; --ok:#3f7a44; --err-bg:#fbeceb; --err:#a8322a;
+    --f:"Inter",system-ui,"Segoe UI",sans-serif; --head:"Manrope",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 var(--f);-webkit-font-smoothing:antialiased}
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer;background:none;border:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .app{display:flex;min-height:100vh}
+
+  /* Sidebar */
+  aside{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;height:100vh;position:sticky;top:0}
+  .brand{display:flex;gap:10px;align-items:center;margin:0 6px 22px}
+  .logo{width:36px;height:36px;border-radius:10px;background:var(--dark);color:var(--bg);display:grid;place-items:center;font-family:var(--head);font-weight:800}
+  .brand b{display:block;font-family:var(--head);font-weight:800;font-size:16px;letter-spacing:-.02em}
+  .brand small{color:var(--muted);font-size:12px}
+  .label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 8px 8px;display:flex;justify-content:space-between}
+  #buscaTab{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--bg)}
+  #buscaTab:focus{outline:none;border-color:var(--accent);background:#fff}
+  #lista{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1}
+  #lista button{width:100%;text-align:left;padding:8px 10px;border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #lista button:hover{background:var(--chip)}
+  #lista button.ativo{background:var(--accent-soft);color:var(--accent-2);font-weight:500}
+
+  /* Cabeçalho */
+  main{flex:1;min-width:0}
+  .topbar{height:14px;background:var(--top)}
+  .head{background:var(--surface);border-bottom:1px solid var(--line);padding:22px 28px 0}
+  .crumb{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  h1{margin:6px 0 10px;font-family:var(--head);font-size:28px;font-weight:800;letter-spacing:-.02em}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--chip);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--ink-2)}
+  .chip.ok{background:var(--ok-bg);color:var(--ok)}
+  .actions{display:flex;gap:10px;margin-top:22px}
+  .btn{padding:11px 16px;border-radius:10px;font-weight:600;border:1px solid var(--line-2);background:var(--surface);transition:.15s}
+  .btn:hover:not(:disabled){background:var(--chip)}
+  .btn-pri{background:var(--dark);border-color:var(--dark);color:var(--bg)}
+  .btn-pri:hover:not(:disabled){background:var(--accent);border-color:var(--accent)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .tabs{display:flex;gap:4px;margin-top:22px}
+  .tab{padding:12px 18px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
+  .tab.on{color:var(--accent);border-color:var(--accent)}
+
+  /* Ferramentas */
+  .body{padding:24px 28px}
+  .tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .search{position:relative;flex:0 1 386px}
+  .search input{width:100%;padding:11px 12px 11px 36px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface)}
+  .search input:focus{outline:none;border-color:var(--accent)}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+  #filtros{display:flex;gap:8px;flex-wrap:wrap}
+  .fchip{display:flex;align-items:center;gap:10px;background:var(--accent-soft);color:var(--accent-2);font-weight:600;padding:10px 12px;border-radius:10px}
+  .fchip button{color:var(--accent-2);font-size:16px;line-height:1}
+  .add{padding:10px 14px;border:1px dashed var(--line-2);border-radius:10px;font-weight:600;color:var(--ink-2)}
+  .add:hover{border-color:var(--accent);color:var(--accent)}
+  .spacer{flex:1}
+  .seg{display:flex;background:var(--chip);border-radius:10px;padding:3px}
+  .seg button{padding:8px 12px;border-radius:8px;font-weight:600;color:var(--muted)}
+  .seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .rel{position:relative}
+  .pop{position:absolute;right:0;top:calc(100% + 6px);z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(31,30,27,.12);padding:14px;min-width:260px;max-height:60vh;overflow:auto;display:none}
+  .pop.open{display:block}
+  .pop.left{left:0;right:auto}
+  .pop label{display:flex;gap:8px;align-items:center;padding:5px 2px;font-size:13px;cursor:pointer}
+  .pop input[type=checkbox]{accent-color:var(--accent)}
+  .pop .f{display:grid;gap:8px}
+  .pop select,.pop input[type=text]{width:100%;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:#fff}
+  .pop .row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+  .pop .row .btn{padding:8px 12px}
+  .pop h4{margin:0 0 8px;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+  /* Grade */
+  .grid{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:calc(100vh - 330px);min-height:240px}
+  table{border-collapse:separate;border-spacing:0;width:100%}
+  th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  .compacta th,.compacta td{padding:7px 14px;font-size:13px}
+  th{position:sticky;top:0;z-index:2;background:var(--chip);font-family:var(--f);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none}
+  th:hover{color:var(--ink)}
+  th .s{color:var(--accent);margin-left:4px}
+  td{color:var(--ink-2);max-width:280px;overflow:hidden;text-overflow:ellipsis}
+  th:first-child,td:first-child{position:sticky;left:0;box-shadow:1px 0 0 var(--line)}
+  td:first-child{background:var(--surface);z-index:1}
+  th:first-child{z-index:3}
+  td.id{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  td.nome{font-weight:600;color:var(--ink)}
+  td.num,th.num{text-align:right}
+  td.num,td.dt{font-family:var(--mono);font-size:13px}
+  tbody tr:nth-child(even) td{background:#fcfbf8}
+  tbody tr:hover td{background:var(--accent-soft)}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--chip);color:var(--ink-2)}
+  .badge.ok{background:var(--ok-bg);color:var(--ok)}
+  .badge.no{background:var(--err-bg);color:var(--err)}
+  .null{color:var(--faint);font-size:12px}
+  .msg{padding:56px;text-align:center;color:var(--muted)}
+  .erro{margin:16px;padding:14px;border-radius:10px;background:var(--err-bg);color:var(--err);list-style:none}
+  .sk{height:12px;margin:18px;border-radius:6px;background:linear-gradient(90deg,var(--chip),var(--line),var(--chip));background-size:200% 100%;animation:sh 1.2s infinite}
+  @keyframes sh{to{background-position:-200% 0}}
+
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;color:var(--muted);font-size:13px}
+  .pager .ctl{display:flex;gap:8px;align-items:center}
+  .pager select{padding:8px;border:1px solid var(--line-2);border-radius:8px;background:#fff}
+  .pager .btn{padding:8px 12px}
+  #pNum{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:8px;background:var(--chip);color:var(--ink-2)}
+
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(31,30,27,.45);display:none;place-items:center;z-index:50}
+  .modal.open{display:grid}
+  .box{background:#fff;border-radius:16px;width:min(720px,92vw);padding:22px}
+  .box h3{margin:0 0 12px;font-family:var(--head);font-weight:800}
+  pre{background:var(--dark);color:#f3f1ea;padding:16px;border-radius:10px;overflow:auto;font:13px/1.6 var(--mono);margin:0}
+  .box .row{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none}
+  .toast.show{opacity:1}
+
+  @media(max-width:768px){
+    .app{flex-direction:column} aside{width:100%;height:auto;position:static}
+    #lista{display:flex;gap:6px;overflow-x:auto} #lista button{border:1px solid var(--line);border-radius:999px}
+    .head,.body{padding-left:16px;padding-right:16px} .spacer{display:none}
+    .grid{max-height:65vh}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand"><div class="logo">A</div><div><b>Atlas</b><small>Catálogo de Dados</small></div></div>
+    <div class="label"><span>Tabelas</span><span id="qtd"></span></div>
+    <input id="buscaTab" placeholder="Filtrar tabelas..." aria-label="Filtrar tabelas">
+    <ul id="lista"><li class="msg">Carregando...</li></ul>
+  </aside>
+
+  <main>
+    <div class="topbar"></div>
+    <section class="head">
+      <div class="crumb">Empresa / dbo / Tabelas</div>
+      <div class="head-row">
+        <div>
+          <h1 id="titulo">Selecione uma tabela</h1>
+          <div class="chips" id="chips"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btnSql" disabled>Ver SQL</button>
+          <div class="rel">
+            <button class="btn btn-pri" id="btnCsv" disabled>Exportar CSV</button>
+            <div class="pop" id="popCsv">
+              <h4>Exportar</h4>
+              <div class="f">
+                <button class="btn" data-exp="pagina">Página atual (filtrada)</button>
+                <button class="btn" data-exp="tudo">Tabela inteira (filtrada)</button>
+                <button class="btn" data-exp="copiar">Copiar para a área de transferência</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab on" data-tab="dados">Dados</button>
+        <button class="tab" data-tab="estrutura">Estrutura</button>
+        <button class="tab" data-tab="resumo">Resumo</button>
+      </nav>
+    </section>
+
+    <section class="body">
+      <div class="tools" id="tools">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="busca" placeholder="Buscar nesta tabela" aria-label="Buscar nesta tabela">
+        </div>
+        <div id="filtros"></div>
+        <div class="rel">
+          <button class="add" id="btnFiltro">+ Filtro</button>
+          <div class="pop left" id="popFiltro">
+            <h4>Novo filtro</h4>
+            <div class="f">
+              <select id="fCol"></select>
+              <select id="fOp">
+                <option value="contem">contém</option><option value="igual">é igual a</option>
+                <option value="dif">é diferente de</option><option value="maior">maior que</option>
+                <option value="menor">menor que</option><option value="vazio">está vazio</option>
+                <option value="cheio">não está vazio</option>
+              </select>
+              <input type="text" id="fVal" placeholder="Valor">
+            </div>
+            <div class="row"><button class="btn" id="fCancel">Cancelar</button><button class="btn btn-pri" id="fOk">Aplicar</button></div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="seg" id="dens"><button data-d="conf">Confortável</button><button data-d="compacta">Compacta</button></div>
+        <div class="rel">
+          <button class="btn" id="btnCols">Colunas –</button>
+          <div class="pop" id="popCols"><h4>Colunas visíveis</h4><div id="listaCols"></div></div>
+        </div>
+      </div>
+
+      <div class="grid" id="conteudo"><div class="msg">Escolha uma tabela no menu lateral.</div></div>
+
+      <div class="pager" id="pager" hidden>
+        <span id="pInfo"></span>
+        <div class="ctl">
+          <select id="size" aria-label="Linhas por página"><option>25</option><option selected>50</option><option>100</option><option>500</option></select>
+          <button class="btn" id="ant">← Anterior</button>
+          <span id="pNum"></span>
+          <button class="btn btn-pri" id="prox">Próxima →</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="modal"><div class="box">
+  <h3>SQL equivalente</h3><pre id="sql"></pre>
+  <div class="row"><button class="btn" id="mCopy">Copiar</button><button class="btn btn-pri" id="mClose">Fechar</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = { tabelas:[], atual:null, page:1, total:0, dados:[], cols:[], ocultas:new Set(),
+            filtros:[], busca:'', sort:null, tab:'dados', carregadoEm:null, principal:null, dens:'conf' };
+
+const txt = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast = m => { $('toast').textContent = m; $('toast').classList.add('show'); setTimeout(()=>$('toast').classList.remove('show'), 2200); };
+const visiveis = () => S.cols.filter(c => !S.ocultas.has(c));
+const isData = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}(T|$)/.test(v);
+const isNum = v => typeof v === 'number';
+const fmtNum = v => Number.isInteger(v) ? v.toLocaleString('pt-BR') : v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtData = v => { const d = new Date(v); return isNaN(d) ? v : d.toLocaleDateString('pt-BR', {timeZone:'UTC'}); };
+const rotulo = c => String(c).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/_/g, ' ');
+
+/* ---------- Densidade ---------- */
+function definirDens(d, salvar){
+  S.dens = d;
+  $('dens').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.d === d));
+  if (salvar && S.atual) localStorage.setItem(`dens:${S.atual}`, d);
+}
+
+
+/* ---------- API ---------- */
+async function api(url){
+  const r = await fetch(url), t = await r.text();
+  let j; try { j = JSON.parse(t); } catch { throw new Error(`Resposta inválida do servidor (${r.status})`); }
+  if (!r.ok) throw new Error(j.erro || r.statusText);
+  return j;
+}
+
+async function carregarTabelas(){
+  try{ S.tabelas = await api('/empresas/tabelas'); renderLista(); }
+  catch(e){ $('lista').innerHTML = `<li class="erro">${txt(e.message)}</li>`; }
+}
+
+async function carregarDados(){
+  const size = $('size').value;
+  $('conteudo').innerHTML = '<div class="sk"></div>'.repeat(6);
+  try{
+    const j = await api(`/empresas/tabelas/${encodeURIComponent(S.atual)}?page=${S.page}&size=${size}`);
+    S.dados = j.dados; S.total = j.total; S.carregadoEm = Date.now();
+    const novas = j.dados.length ? Object.keys(j.dados[0]) : S.cols;
+    if (novas.join() !== S.cols.join()){
+      S.cols = novas; S.ocultas.clear();
+      S.principal = S.cols.find(c => /name|nome|razao/i.test(c)) || null;
+      definirDens(localStorage.getItem(`dens:${S.atual}`) || (S.cols.length > 8 ? 'compacta' : 'conf'));
+    }
+    render();
+  }catch(e){ $('conteudo').innerHTML = `<div class="erro"><b>Erro:</b> ${txt(e.message)}</div>`; }
+}
+
+/* ---------- Filtros ---------- */
+function aplicar(rows){
+  const b = S.busca.toLowerCase(), vis = visiveis();
+  let out = rows.filter(l =>
+    (!b || vis.some(c => String(l[c] ?? '').toLowerCase().includes(b))) &&
+    S.filtros.every(f => testar(l[f.col], f)));
+  if (S.sort){
+    const {col, dir} = S.sort;
+    out = [...out].sort((a,b) => {
+      const x = a[col], y = b[col];
+      if (x == null) return 1; if (y == null) return -1;
+      return (isNum(x) && isNum(y) ? x - y : String(x).localeCompare(String(y),'pt-BR',{numeric:true})) * dir;
+    });
+  }
+  return out;
+}
+function testar(v, {op, val}){
+  const s = String(v ?? '').toLowerCase(), q = String(val).toLowerCase();
+  const n = parseFloat(String(val).replace(/\./g,'').replace(',','.'));
+  switch(op){
+    case 'contem': return s.includes(q);
+    case 'igual':  return s === q;
+    case 'dif':    return s !== q;
+    case 'maior':  return Number(v) > n;
+    case 'menor':  return Number(v) < n;
+    case 'vazio':  return v == null || v === '';
+    case 'cheio':  return !(v == null || v === '');
+  }
+}
+const OPS = {contem:'contém',igual:'=',dif:'≠',maior:'>',menor:'<',vazio:'vazio',cheio:'não vazio'};
+
+/* ---------- Render ---------- */
+function renderLista(){
+  const f = $('buscaTab').value.toLowerCase();
+  const lista = S.tabelas.filter(t => t.tabela.toLowerCase().includes(f));
+  $('qtd').textContent = f ? `${lista.length} de ${S.tabelas.length}` : S.tabelas.length;
+  $('lista').innerHTML = lista
+    .map(t => `<li><button data-nome="${txt(t.tabela)}" title="${txt(t.tabela)}" class="${t.tabela===S.atual?'ativo':''}">${txt(t.tabela)}</button></li>`)
+    .join('') || '<li class="msg">Nenhuma tabela</li>';
+}
+
+function tempo(){
+  if(!S.carregadoEm) return '';
+  const m = Math.floor((Date.now()-S.carregadoEm)/60000);
+  return m < 1 ? 'Atualizada agora' : `Atualizada há ${m} min`;
+}
+
+function renderHead(){
+  $('titulo').textContent = S.atual;
+  $('chips').innerHTML = `<span class="chip">${S.total.toLocaleString('pt-BR')} registros</span>
+    <span class="chip">${S.cols.length} colunas</span><span class="chip ok">${tempo()}</span>`;
+  $('btnCols').textContent = `Colunas ${visiveis().length} de ${S.cols.length}`;
+  $('btnSql').disabled = $('btnCsv').disabled = false;
+  $('fCol').innerHTML = S.cols.map(c => `<option value="${txt(c)}">${txt(rotulo(c))}</option>`).join('');
+  $('listaCols').innerHTML = S.cols.map(c => `<label><input type="checkbox" data-col="${txt(c)}" ${S.ocultas.has(c)?'':'checked'}> ${txt(rotulo(c))}</label>`).join('');
+  $('filtros').innerHTML = S.filtros.map((f,i) =>
+    `<span class="fchip">${txt(rotulo(f.col))}: ${f.op==='contem'||f.op==='igual'?'':OPS[f.op]+' '}${txt(f.val)}<button data-rm="${i}" aria-label="Remover filtro">×</button></span>`).join('');
+}
+
+function celula(c, v, i){
+  if (v == null) return `<td><span class="null">NULL</span></td>`;
+  if (/^status$|situa/i.test(c)){
+    const s = String(v).toLowerCase(), cls = /ativo|sim|ok|aprov|pago/.test(s) && !/inativo/.test(s) ? 'ok' : /inativo|cancel|bloq|não|nao/.test(s) ? 'no' : '';
+    return `<td><span class="badge ${cls}">${txt(v)}</span></td>`;
+  }
+  if (i === 0 || /^id$|^id_|_id$/i.test(c)) return `<td class="id">${txt(v)}</td>`;
+  if (isNum(v)) return `<td class="num">${fmtNum(v)}</td>`;
+  if (isData(v)) return `<td class="dt">${fmtData(v)}</td>`;
+  const t = txt(v);
+  if (c === S.principal) return `<td class="nome" title="${t}">${t}</td>`;
+  return `<td title="${t}">${t}</td>`;
+}
+
+function renderDados(){
+  const vis = visiveis(), rows = aplicar(S.dados);
+  if (!S.dados.length) return $('conteudo').innerHTML = '<div class="msg">Tabela vazia.</div>';
+  if (!rows.length)   return $('conteudo').innerHTML = '<div class="msg">Nenhum registro corresponde aos filtros nesta página.</div>';
+  const numCol = c => S.dados.some(l => isNum(l[c])) && !/^id/i.test(c);
+  $('conteudo').innerHTML = `<table class="${S.dens}">
+    <thead><tr>${vis.map(c => `<th data-sort="${txt(c)}" title="${txt(c)}" class="${numCol(c)?'num':''}">${txt(rotulo(c))}${S.sort?.col===c?`<span class="s">${S.sort.dir>0?'↑':'↓'}</span>`:''}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(l => `<tr>${vis.map(c => celula(c, l[c], S.cols.indexOf(c))).join('')}</tr>`).join('')}</tbody></table>`;
+}
+
+function tipo(c){
+  const v = S.dados.map(l => l[c]).find(x => x != null);
+  if (v == null) return 'desconhecido';
+  if (isNum(v)) return Number.isInteger(v) ? 'inteiro' : 'decimal';
+  if (typeof v === 'boolean') return 'booleano';
+  if (isData(v)) return 'data/hora';
+  return 'texto';
+}
+
+function renderEstrutura(){
+  $('conteudo').innerHTML = `<table class="${S.dens}"><thead><tr><th>#</th><th>Coluna</th><th>Tipo (inferido)</th><th>Exemplo</th></tr></thead><tbody>
+    ${S.cols.map((c,i) => { const ex = txt(S.dados.find(l=>l[c]!=null)?.[c] ?? '—');
+      return `<tr><td class="id">${i+1}</td><td class="nome">${txt(c)}</td><td>${tipo(c)}</td><td title="${ex}">${ex}</td></tr>`; }).join('')}</tbody></table>`;
+}
+
+function renderResumo(){
+  const n = S.dados.length;
+  $('conteudo').innerHTML = `<table class="${S.dens}"><thead><tr><th>Coluna</th><th class="num">Nulos</th><th class="num">Distintos</th><th class="num">Mín</th><th class="num">Máx</th><th class="num">Média</th></tr></thead><tbody>
+    ${S.cols.map(c => {
+      const vals = S.dados.map(l => l[c]), nn = vals.filter(v => v != null), nums = nn.filter(isNum);
+      const st = nums.length ? [Math.min(...nums), Math.max(...nums), nums.reduce((a,b)=>a+b,0)/nums.length].map(fmtNum) : ['—','—','—'];
+      return `<tr><td class="nome">${txt(c)}</td><td class="num">${n-nn.length}</td><td class="num">${new Set(nn.map(String)).size}</td>${st.map(x=>`<td class="num">${x}</td>`).join('')}</tr>`;
+    }).join('')}</tbody></table>
+    <div class="msg" style="padding:14px">Estatísticas calculadas sobre os ${n} registros da página atual.</div>`;
+}
+
+function render(){
+  renderHead();
+  $('tools').style.display = S.tab === 'dados' ? 'flex' : 'none';
+  $('pager').hidden = false;
+  ({dados:renderDados, estrutura:renderEstrutura, resumo:renderResumo})[S.tab]();
+  const size = +$('size').value, pags = Math.max(Math.ceil(S.total/size),1);
+  const ini = S.total ? (S.page-1)*size+1 : 0, fim = Math.min(S.page*size, S.total);
+  $('pInfo').textContent = `Mostrando ${ini.toLocaleString('pt-BR')}–${fim.toLocaleString('pt-BR')} de ${S.total.toLocaleString('pt-BR')}`;
+  $('pNum').textContent = `${S.page} / ${pags}`;
+  $('ant').disabled = S.page <= 1; $('prox').disabled = S.page >= pags;
+}
+
+/* ---------- Exportação ---------- */
+function csv(rows){
+  const vis = visiveis(), q = v => { if (v == null) return ''; const s = String(v); return /[;"\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
+  return [vis.join(';'), ...rows.map(l => vis.map(c => q(isNum(l[c]) ? String(l[c]).replace('.',',') : l[c])).join(';'))].join('\r\n');
+}
+function baixar(conteudo, nome){
+  const url = URL.createObjectURL(new Blob(['\uFEFF'+conteudo], {type:'text/csv;charset=utf-8'}));
+  Object.assign(document.createElement('a'), {href:url, download:nome}).click();
+  URL.revokeObjectURL(url);
+}
+async function exportar(modo){
+  fechar();
+  const nome = `${S.atual}_${new Date().toISOString().slice(0,10)}`;
+  if (modo === 'pagina') return baixar(csv(aplicar(S.dados)), `${nome}_p${S.page}.csv`);
+  if (modo === 'copiar') { await navigator.clipboard.writeText(csv(aplicar(S.dados)).replace(/;/g,'\t')); return toast('Copiado! Cole no Excel.'); }
+  if (S.total > 100000 && !confirm(`A tabela tem ${S.total.toLocaleString('pt-BR')} registros. Continuar?`)) return;
+  const btn = $('btnCsv'), todas = [], size = 500, pags = Math.ceil(S.total/size);
+  btn.disabled = true;
+  try{
+    for (let p = 1; p <= pags; p++){
+      btn.textContent = `Exportando ${Math.round(p/pags*100)}%`;
+      todas.push(...(await api(`/empresas/tabelas/${encodeURIComponent(S.atual)}?page=${p}&size=${size}`)).dados);
+    }
+    const filtradas = aplicar(todas);
+    baixar(csv(filtradas), `${nome}.csv`); toast(`${filtradas.length.toLocaleString('pt-BR')} registros exportados`);
+  }catch(e){ toast('Erro: '+e.message); }
+  btn.disabled = false; btn.textContent = 'Exportar CSV';
+}
+
+function gerarSQL(){
+  const size = +$('size').value, cols = visiveis().map(c => `[${c}]`).join(', ') || '*';
+  const sqlOp = f => {
+    const c = `[${f.col}]`, e = String(f.val).replace(/'/g,"''"), v = `'${e}'`;
+    return {contem:`${c} LIKE '%${e}%'`, igual:`${c} = ${v}`, dif:`${c} <> ${v}`,
+            maior:`${c} > ${f.val}`, menor:`${c} < ${f.val}`, vazio:`${c} IS NULL`, cheio:`${c} IS NOT NULL`}[f.op];
+  };
+  const where = S.filtros.length ? `\nWHERE ${S.filtros.map(sqlOp).join('\n  AND ')}` : '';
+  const order = S.sort ? `[${S.sort.col}] ${S.sort.dir>0?'ASC':'DESC'}` : '(SELECT NULL)';
+  return `SELECT ${cols}\nFROM [dbo].[${S.atual}]${where}\nORDER BY ${order}\nOFFSET ${(S.page-1)*size} ROWS FETCH NEXT ${size} ROWS ONLY;`;
+}
+
+/* ---------- Eventos ---------- */
+const fechar = () => document.querySelectorAll('.pop.open').forEach(p => p.classList.remove('open'));
+const toggle = (id, e) => { e.stopPropagation(); const p = $(id), ab = p.classList.contains('open'); fechar(); if(!ab) p.classList.add('open'); };
+document.addEventListener('click', e => { if (!e.target.closest('.pop')) fechar(); });
+
+$('lista').onclick = e => {
+  const b = e.target.closest('button[data-nome]'); if (!b) return;
+  Object.assign(S, {atual:b.dataset.nome, page:1, filtros:[], busca:'', sort:null, cols:[]});
+  $('busca').value = ''; renderLista(); carregarDados();
+};
+$('buscaTab').oninput = renderLista;
+$('busca').oninput = e => { S.busca = e.target.value; renderDados(); };
+
+$('btnFiltro').onclick = e => toggle('popFiltro', e);
+$('fOp').onchange = () => $('fVal').style.display = /vazio|cheio/.test($('fOp').value) ? 'none' : '';
+$('fCancel').onclick = fechar;
+$('fOk').onclick = () => {
+  const f = {col:$('fCol').value, op:$('fOp').value, val:$('fVal').value.trim()};
+  if (!/vazio|cheio/.test(f.op) && !f.val) return $('fVal').focus();
+  S.filtros.push(f); $('fVal').value = ''; fechar(); render();
+};
+$('fVal').onkeydown = e => e.key === 'Enter' && $('fOk').click();
+$('filtros').onclick = e => { const i = e.target.dataset.rm; if (i != null){ S.filtros.splice(i,1); render(); } };
+
+$('dens').onclick = e => { const b = e.target.closest('button'); if(!b) return;
+  definirDens(b.dataset.d, true); if (S.atual) render(); };
+$('btnCols').onclick = e => toggle('popCols', e);
+$('listaCols').onchange = e => { const c = e.target.dataset.col;
+  e.target.checked ? S.ocultas.delete(c) : S.ocultas.add(c);
+  if (!visiveis().length){ S.ocultas.delete(c); e.target.checked = true; return toast('Mantenha ao menos uma coluna'); }
+  $('btnCols').textContent = `Colunas ${visiveis().length} de ${S.cols.length}`; renderDados(); };
+
+$('conteudo').onclick = e => { const th = e.target.closest('th[data-sort]'); if(!th) return;
+  const c = th.dataset.sort; S.sort = S.sort?.col===c ? (S.sort.dir>0 ? {col:c,dir:-1} : null) : {col:c,dir:1}; renderDados(); };
+
+document.querySelector('.tabs').onclick = e => { const t = e.target.closest('.tab'); if(!t || !S.atual) return;
+  S.tab = t.dataset.tab; document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x===t)); render(); };
+
+$('btnCsv').onclick = e => toggle('popCsv', e);
+$('popCsv').onclick = e => { const m = e.target.dataset.exp; if (m) exportar(m); };
+$('btnSql').onclick = () => { $('sql').textContent = gerarSQL(); $('modal').classList.add('open'); };
+$('mClose').onclick = () => $('modal').classList.remove('open');
+$('modal').onclick = e => e.target === $('modal') && $('modal').classList.remove('open');
+$('mCopy').onclick = async () => { await navigator.clipboard.writeText($('sql').textContent); toast('SQL copiado'); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ fechar(); $('modal').classList.remove('open'); } });
+
+$('ant').onclick = () => { S.page--; carregarDados(); };
+$('prox').onclick = () => { S.page++; carregarDados(); };
+$('size').onchange = () => { if (S.atual){ S.page = 1; carregarDados(); } };
+setInterval(() => S.atual && renderHead(), 30000);
+
+definirDens('conf');
+localStorage.removeItem('dens'); // apaga a preferência antiga, que valia para todas as tabelas
+
+carregarTabelas();
+</script>
+</body>
+</html>
